@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/dashboard_page.dart';
-import 'package:flutter_application_1/api_service.dart';
+import 'package:flutter_application_1/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -10,13 +9,10 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // 1. Tambahkan GlobalKey untuk FormState
   final _formKey = GlobalKey<FormState>();
+  final AuthService _authService = AuthService(); // Instance Auth Service
 
-  // Variabel state untuk mengontrol visibilitas password
   bool isPasswordVisible = false;
-
-  // Controller untuk mengambil input
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
@@ -29,41 +25,28 @@ class _LoginPageState extends State<LoginPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
-        // 2. Bungkus Column dengan Form dan berikan key
         child: Form(
           key: _formKey,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.local_shipping,
-                size: 80,
-                color: Colors.blueAccent,
-              ),
+              const Icon(Icons.local_shipping,
+                  size: 80, color: Colors.blueAccent),
               const SizedBox(height: 48),
 
-              // 3. Ganti TextField menjadi TextFormField untuk Email
               TextFormField(
                 controller: emailController,
                 decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                ),
-                // 4. Tambahkan validator email
+                    labelText: 'Email', border: OutlineInputBorder()),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
+                  if (value == null || value.isEmpty)
                     return 'Email tidak boleh kosong';
-                  }
-                  if (!value.contains('@')) {
-                    return 'Masukkan format email yang valid';
-                  }
-                  return null; // Return null jika valid
+                  if (!value.contains('@')) return 'Format email salah';
+                  return null;
                 },
               ),
-
               const SizedBox(height: 16),
 
-              // 3. Ganti TextField menjadi TextFormField untuk Password
               TextFormField(
                 controller: passwordController,
                 obscureText: !isPasswordVisible,
@@ -71,73 +54,73 @@ class _LoginPageState extends State<LoginPage> {
                   labelText: 'Password',
                   border: const OutlineInputBorder(),
                   suffixIcon: IconButton(
-                    icon: Icon(
-                      isPasswordVisible
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        isPasswordVisible = !isPasswordVisible;
-                      });
-                    },
+                    icon: Icon(isPasswordVisible
+                        ? Icons.visibility
+                        : Icons.visibility_off),
+                    onPressed: () =>
+                        setState(() => isPasswordVisible = !isPasswordVisible),
                   ),
                 ),
-                // 4. Tambahkan validator password
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
+                  if (value == null || value.isEmpty)
                     return 'Password tidak boleh kosong';
-                  }
-                  if (value.length < 6) {
-                    return 'Password minimal harus 6 karakter';
-                  }
-                  return null; // Return null jika valid
+                  if (value.length < 6) return 'Minimal 6 karakter';
+                  return null;
                 },
               ),
-
               const SizedBox(height: 32),
 
+              // TOMBOL LOGIN
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
                   onPressed: () async {
-                    // 5. Cek apakah form valid sebelum melanjutkan
                     if (_formKey.currentState!.validate()) {
-                      // Jika valid, jalankan logika login/API
-                      print('Form valid!');
+                      // Panggil Service Login
+                      final user = await _authService.signInWithEmailPassword(
+                        emailController.text,
+                        passwordController.text,
+                      );
 
-                      // Membuat instance dari ApiService
-                      final apiService = ApiService();
-
-                      try {
-                        // Panggil method dan tunggu hasilnya
-                        final tasks = await apiService.fetchDeliveryTasks();
-
-                        print('Berhasil mengambil data: ${tasks.length} item.');
-                        if (tasks.isNotEmpty) {
-                          print('Judul data pertama: ${tasks.first.title}');
+                      if (user == null) {
+                        // Jika gagal
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content:
+                                    Text('Login Gagal! Cek email/password.')),
+                          );
                         }
-                      } catch (e) {
-                        print(e);
                       }
-
-                      // Navigasi ke halaman dashboard
-                      if (context.mounted) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const DashboardPage(),
-                          ),
-                        );
-                      }
-                    } else {
-                      print('Form tidak valid!');
+                      // Jika berhasil, AuthGate otomatis mengalihkan ke Dashboard
                     }
                   },
                   child: const Text('LOGIN', style: TextStyle(fontSize: 18)),
                 ),
               ),
+
+              const SizedBox(height: 16),
+
+              // TOMBOL REGISTRASI (Tambahan agar bisa tes buat akun)
+              TextButton(
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      final user = await _authService.registerWithEmailPassword(
+                        emailController.text,
+                        passwordController.text,
+                      );
+                      if (user != null && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content:
+                                  Text('Registrasi Berhasil! Silakan Login.')),
+                        );
+                      }
+                    }
+                  },
+                  child: const Text(
+                      'Belum punya akun? Daftar di sini (Isi form lalu klik ini)'))
             ],
           ),
         ),

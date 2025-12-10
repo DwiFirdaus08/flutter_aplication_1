@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/api_service.dart';
+import 'package:flutter_application_1/auth_service.dart'; // Import AuthService
 import 'package:flutter_application_1/delivery_task_model.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -10,16 +11,12 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  // 1. Buat instance ApiService
   final ApiService apiService = ApiService();
-
-  // 2. Buat variabel untuk menampung hasil dari future
   late Future<List<DeliveryTask>> _tasksFuture;
 
   @override
   void initState() {
     super.initState();
-    // 3. Panggil API dan simpan future-nya ke variabel saat inisialisasi
     _tasksFuture = apiService.fetchDeliveryTasks();
   }
 
@@ -32,35 +29,26 @@ class _DashboardPageState extends State<DashboardPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () {
-              // Kembali ke halaman Login
-              Navigator.pop(context);
+            onPressed: () async {
+              // Panggil fungsi Logout dari AuthService
+              await AuthService().signOut();
+              // Tidak perlu Navigator.pop, AuthGate otomatis balik ke Login
             },
           ),
         ],
       ),
-      // 4. Gunakan FutureBuilder untuk menangani data asinkron
       body: FutureBuilder<List<DeliveryTask>>(
         future: _tasksFuture,
         builder: (context, snapshot) {
-          // Kondisi 1: Saat data sedang dimuat
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
-          }
-          // Kondisi 2: Jika terjadi error
-          else if (snapshot.hasError) {
+          } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
-          }
-          // Kondisi 3: Jika data berhasil dimuat
-          else if (snapshot.hasData) {
+          } else if (snapshot.hasData) {
             final tasks = snapshot.data!;
-
-            // Cek jika data kosong
             if (tasks.isEmpty) {
               return const Center(child: Text('Tidak ada data pengiriman.'));
             }
-
-            // Gunakan ListView.builder untuk performa lebih baik
             return ListView.builder(
               padding: const EdgeInsets.all(16.0),
               itemCount: tasks.length,
@@ -79,26 +67,14 @@ class _DashboardPageState extends State<DashboardPage> {
                       task.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        decoration: task.isCompleted
-                            ? TextDecoration.lineThrough
-                            : null,
-                      ),
                     ),
                     subtitle: Text('ID Tugas: ${task.id}'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // Aksi ketika item diklik (bisa ditambahkan navigasi detail nanti)
-                    },
                   ),
                 );
               },
             );
           }
-          // Kondisi default
-          return const Center(
-            child: Text('Terjadi kesalahan tidak diketahui.'),
-          );
+          return const Center(child: Text('Terjadi kesalahan.'));
         },
       ),
     );
