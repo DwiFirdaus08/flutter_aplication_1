@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/api_service.dart';
 import 'package:flutter_application_1/auth_service.dart'; // Import AuthService
 import 'package:flutter_application_1/delivery_task_model.dart';
+import 'package:flutter_application_1/delivery_detail_page.dart'; 
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -69,6 +70,17 @@ class _DashboardPageState extends State<DashboardPage> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     subtitle: Text('ID Tugas: ${task.id}'),
+                    
+                    // ungsi onTap untuk navigasi ke halaman detail
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DeliveryDetailPage(task: task),
+                        ),
+                      );
+                    },
+                    // --
                   ),
                 );
               },
