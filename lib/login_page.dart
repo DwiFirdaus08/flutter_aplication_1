@@ -39,8 +39,9 @@ class _LoginPageState extends State<LoginPage> {
                 decoration: const InputDecoration(
                     labelText: 'Email', border: OutlineInputBorder()),
                 validator: (value) {
-                  if (value == null || value.isEmpty)
+                  if (value == null || value.isEmpty) {
                     return 'Email tidak boleh kosong';
+                  }
                   if (!value.contains('@')) return 'Format email salah';
                   return null;
                 },
@@ -62,8 +63,9 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty)
+                  if (value == null || value.isEmpty) {
                     return 'Password tidak boleh kosong';
+                  }
                   if (value.length < 6) return 'Minimal 6 karakter';
                   return null;
                 },
